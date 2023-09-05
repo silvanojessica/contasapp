@@ -1,21 +1,15 @@
 package br.com.cotiinformatica.repositories;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-
 import javax.sql.DataSource;
-
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-
 import br.com.cotiinformatica.entities.Conta;
 import br.com.cotiinformatica.entities.Usuario;
-
 public class ContaRepository {
-
 	private JdbcTemplate jdbcTemplate;
 	
 	public ContaRepository(DataSource dataSource) {
@@ -80,9 +74,9 @@ public class ContaRepository {
 		
 		//escrevendo a instrução SQL para consultar as contas na tabela do banco
 		String sql = "select * from conta "
-				   + "where data between ? and ? "
-				   + "and usuario_id = ? "
-				   + "order by data";
+				 + "where data between ? and ? "
+				 + "and usuario_id = ? "
+				 + "order by data";
 		
 		Object[] params = {
 			new java.sql.Date(dataMin.getTime()),
@@ -91,10 +85,8 @@ public class ContaRepository {
 		};
 		
 		List<Conta> contas = jdbcTemplate.query(sql, params, new RowMapper<Conta>() {
-
 			@Override
 			public Conta mapRow(ResultSet rs, int rowNum) throws SQLException {
-
 				Conta conta = new Conta();
 				conta.setUsuario(new Usuario());
 				
@@ -120,14 +112,49 @@ public class ContaRepository {
 		return contas;
 	}
 	
+	//método para consultar 1 conta através do ID
+	public Conta findById(Integer id) throws Exception {
+			
+		//escrevendo a instrução SQL para consultar as contas na tabela do banco
+		String sql = "select * from conta where id = ?";
+			
+		Object[] params = { id };
+			
+		List<Conta> contas = jdbcTemplate.query(sql, params, new RowMapper<Conta>() {
+			@Override
+			public Conta mapRow(ResultSet rs, int rowNum) throws SQLException {
+				Conta conta = new Conta();
+				conta.setUsuario(new Usuario());
+					
+				conta.setId(rs.getInt("id"));
+				conta.setNome(rs.getString("nome"));
+				conta.setDescricao(rs.getString("descricao"));
+				conta.setValor(rs.getDouble("valor"));
+				conta.setTipo(rs.getInt("tipo"));
+				conta.getUsuario().setId(rs.getInt("usuario_id"));
+					
+				try {
+					conta.setData(new SimpleDateFormat("yyyy-MM-dd").parse(rs.getString("data")));
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+				}			
+					
+				return conta;
+			}
+				
+		});
+			
+		//verificando se alguma conta foi encontrada
+		if(contas.size() == 1) {
+			//returnando os dados da conta
+			return contas.get(0);
+		}
+		else {
+			return null; //vazio
+		}
+	}
 }
-
-
-
-
-
-
-
 
 
 
