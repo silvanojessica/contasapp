@@ -1,5 +1,6 @@
 package br.com.cotiinformatica.controller;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -61,7 +62,36 @@ public class EditarContasController {
 		ModelAndView modelAndView = new ModelAndView("admin/consultar-contas");
 		
 		try {
+			//capturar todos os campos enviados pelo formulário
+			Conta conta = new Conta();
 			
+			conta.setId(Integer.parseInt(request.getParameter("id")));
+			conta.setNome(request.getParameter("nome"));
+			conta.setData(new SimpleDateFormat("yyyy-MM-dd").parse(request.getParameter("data")));
+			conta.setValor(Double.parseDouble(request.getParameter("valor")));
+			conta.setTipo(Integer.parseInt(request.getParameter("tipo")));
+			conta.setDescricao(request.getParameter("descricao"));
+					
+			//atualizar a conta no banco de dados
+			contaRepository.update(conta);
+			
+			modelAndView.addObject("mensagem_sucesso", "Conta atualizada com sucesso.");
+			
+			//capturando as datas selecionadas que estão em sessão
+			String dataInicio = (String) request.getSession().getAttribute("dt_inicio");
+			String dataFim = (String) request.getSession().getAttribute("dt_fim");
+			
+			//captura o usuário autenticado na sessão
+			UsuarioDTO usuarioDTO = (UsuarioDTO) request.getSession().getAttribute("usuario_auth");
+			
+			//realiza uma nova consulta de contas no banco de dados
+			List<Conta> contas = contaRepository.findAll(
+					new SimpleDateFormat("yyyy-MM-dd").parse(dataInicio),
+					new SimpleDateFormat("yyyy-MM-dd").parse(dataFim),
+					usuarioDTO.getId());
+			
+			//envia os dados da consulta para a página
+			modelAndView.addObject("listagem_contas", contas);		
 		}
 		catch(Exception e) {
 			modelAndView.addObject("mensagem_erro", e.getMessage());
@@ -70,3 +100,6 @@ public class EditarContasController {
 		return modelAndView;
 	}
 }
+
+
+
